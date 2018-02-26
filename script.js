@@ -37,8 +37,16 @@ document.addEventListener('DOMContentLoaded', function() {
         newTodoItem.querySelector('a').innerText = 'delete';
         newTodoItem.querySelector('a').classList.add('delete-button');
         newTodoItem.querySelector('input').setAttribute('type', 'checkbox');
-        // I need to included something here that says "if object.completed == true, 
-        // then set the checked attribute of this element"
+        
+        if(todoObject.completed) {
+            newTodoItem.querySelector('input').setAttribute('checked', '');
+            newTodoItem.classList.add('completed');
+        }
+
+        if(todoObject.deleted) {
+            newTodoItem.classList.add('deleted');
+        }
+
 
         newTodoItem.querySelector('input').classList.add('todo-checkbox');        
         
@@ -63,6 +71,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
             for(i=0; i<todoDeleteButton.length; i++) {
                 todoDeleteButton[i].addEventListener('click', function(e) {
+                    var tempTodosObject = JSON.parse(localStorage.getItem('todos'));
+                    tempTodosObject[e.target.parentNode.getAttribute('data-id')].deleted = true;
+                    localStorage.setItem('todos', JSON.stringify(tempTodosObject));
                     e.target.parentNode.remove();
                 });
             }
@@ -71,6 +82,7 @@ document.addEventListener('DOMContentLoaded', function() {
             var todoDeleteButton = document.querySelector('.delete-button');
 
             todoCheckbox.addEventListener('click', function(e) {
+                var tempTodosObject = JSON.parse(localStorage.getItem('todos'));
                 if(e.target.checked) {
                     e.target.parentNode.classList.add('completed');
                     tempTodosObject[e.target.parentNode.getAttribute('data-id')].completed = true;
@@ -83,6 +95,9 @@ document.addEventListener('DOMContentLoaded', function() {
             });
 
             todoDeleteButton.addEventListener('click', function(e) {
+                var tempTodosObject = JSON.parse(localStorage.getItem('todos'));
+                tempTodosObject[e.target.parentNode.getAttribute('data-id')].deleted = true;
+                localStorage.setItem('todos', JSON.stringify(tempTodosObject));
                 e.target.parentNode.remove();
             });
         }         
@@ -91,22 +106,32 @@ document.addEventListener('DOMContentLoaded', function() {
     setupExistingTodos();
   
   submitNewTodo.addEventListener('click', function(e) {
+    var todos = JSON.parse(localStorage.getItem('todos'));
     e.preventDefault();
     if(newTodoInput.value) {
-    	var newTodo = {
-            'id'            : Object.keys(todos).length+1,
-    	  	'content' 		: newTodoInput.value,
-    	  	'completed'		: false,
-    	  	'dateCompleted' : null,
-    	  	'dateAdded'		: new Date()
-    	}
+        var newTodo = {
+            'id'            : todos ? Object.keys(todos).length+1 : 1,
+          	'content' 		: newTodoInput.value,
+          	'completed'		: false,
+          	'dateCompleted' : null,
+          	'dateAdded'		: new Date(),
+            'deleted'       : false
+        }
 
-    	todos[Object.keys(todos).length+1] = newTodo;
+        if(todos) {
+            todos[Object.keys(todos).length+1] = newTodo;
+        } else {
+            var todos = {}
+            todos[1] = newTodo;
+            localStorage.setItem('todos', JSON.stringify(todos));
+        }
 
         localStorage.setItem('todos', JSON.stringify(todos));
-    	
-		newTodoInput.value = '';
-		var newTodoItem = document.createElement('li');    
+
+        newTodoInput.value = '';
+        var newTodoItem = document.createElement('li');
+
+        createNewTodo(Object.keys(todos).length, newTodo);  
     }
     });   
 });
